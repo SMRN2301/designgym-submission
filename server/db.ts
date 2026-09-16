@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { desc, eq, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
-import { ENV } from './_core/env';
+import { attempts, authTokens, InsertAttempt, InsertUser, users } from "../drizzle/schema";
+import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -35,7 +35,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     };
     const updateSet: Record<string, unknown> = {};
 
-    const textFields = ["name", "email", "loginMethod"] as const;
+    const textFields = ["name", "email", "username", "phone", "passwordHash", "loginMethod"] as const;
     type TextField = (typeof textFields)[number];
 
     const assignNullable = (field: TextField) => {
@@ -89,4 +89,82 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function getUserByCredential(identifier: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(or(eq(users.email, identifier), eq(users.username, identifier), eq(users.phone, identifier))).limit(1);
+  return result[0];
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result[0];
+}
+
+export async function getUserByUsername(username: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+  return result[0];
+}
+
+export async function getUserByPhone(phone: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.phone, phone)).limit(1);
+  return result[0];
+}
+
+export async function saveAttempt(attempt: InsertAttempt) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.insert(attempts).values(attempt).onDuplicateKeyUpdate({
+    set: { status: attempt.status, submission: attempt.submission, evaluation: attempt.evaluation, updatedAt: new Date() },
+  });
+}
+
+export async function listAttempts(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  return db.select().from(attempts).where(eq(attempts.userId, userId)).orderBy(desc(attempts.updatedAt));
+}
+
+export async function updateUserProfile(userId: number, values: Partial<Pick<InsertUser, "name" | "learningTrack">>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.update(users).set(values).where(eq(users.id, userId));
+  return db.select().from(users).where(eq(users.id, userId)).limit(1).then(result => result[0]);
+}
+
+export async function updateUserPassword(userId: number, passwordHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+}
+
+export async function createAuthToken(token: typeof authTokens.$inferInsert) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.insert(authTokens).values(token);
+}
+
+export async function getAuthToken(tokenHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  const result = await db.select().from(authTokens).where(eq(authTokens.tokenHash, tokenHash)).limit(1);
+  return result[0];
+}
+
+export async function consumeAuthToken(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.update(authTokens).set({ usedAt: new Date() }).where(eq(authTokens.id, id));
+}
+
+export async function markUserVerified(userId: number, kind: "email" | "phone") {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.update(users).set(kind === "email" ? { emailVerifiedAt: new Date() } : { phoneVerifiedAt: new Date() }).where(eq(users.id, userId));
+}

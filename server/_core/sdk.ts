@@ -276,6 +276,8 @@ class SDKServer {
       throw ForbiddenError("Invalid session cookie");
     }
 
+    const signedInAt = new Date();
+
     if (session.openId.startsWith(CRON_OPEN_ID_PREFIX)) {
       const userInfo = await this.getUserInfoWithJwt(sessionToken ?? "");
       const taskUid = userInfo.taskUid ?? null;
@@ -285,8 +287,14 @@ class SDKServer {
       return buildCronUser(userInfo);
     }
 
+    if (session.openId.startsWith("cred_")) {
+      const credentialUser = await db.getUserByOpenId(session.openId);
+      if (!credentialUser) throw ForbiddenError("Credential user not found");
+      await db.upsertUser({ openId: credentialUser.openId, lastSignedIn: signedInAt });
+      return credentialUser;
+    }
+
     const sessionUserId = session.openId;
-    const signedInAt = new Date();
     let user = await db.getUserByOpenId(sessionUserId);
 
     // If user not in DB, sync from OAuth server automatically
