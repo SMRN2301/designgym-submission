@@ -111,6 +111,17 @@ function AppShell({ view, setView, children, attempts }: { view: View; setView: 
     window.addEventListener("designgym:section", handleSection);
     return () => window.removeEventListener("designgym:section", handleSection);
   }, []);
+  useEffect(() => {
+    const nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    const observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-visible");
+        observer.unobserve(entry.target);
+      }
+    }), { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, [view]);
   const navActive = (key: string) => view === "overview" ? (scrollNav ? scrollNav === key : key === "overview") : view === key;
   const go = (next: View) => { setScrollNav(null); setView(next); window.scrollTo({ top: 0, behavior: "smooth" }); };
   return (
@@ -190,19 +201,19 @@ function Overview({ attempts, startPractice, openReview }: { attempts: Attempt[]
   }, []);
   return <div className="content-wrap overview-page">
     <Header eyebrow="CipherSchools · Wednesday · 16 September 2026" title={<>Make the second attempt<br /><em>more useful</em> than the first.</>} description="A focused practice loop for CipherSchools learners building the design judgment employers expect." action={<button className="icon-button" aria-label="Help"><CircleHelp size={18} /></button>} />
-    <section id="overview-anchor" className="hero-strip" style={{ backgroundImage: "linear-gradient(90deg, rgba(27,39,49,.98) 0%, rgba(27,39,49,.88) 45%, rgba(27,39,49,.38) 100%), url('/assets/designgym-lab-hero.jpg')" }}>
+    <section id="overview-anchor" data-reveal className="hero-strip" style={{ backgroundImage: "linear-gradient(90deg, rgba(27,39,49,.98) 0%, rgba(27,39,49,.88) 45%, rgba(27,39,49,.38) 100%), url('/assets/designgym-lab-hero.jpg')" }}>
       <div className="hero-copy"><div className="hero-kicker"><span className="live-dot" /> Your CipherSchools practice loop is active</div><h2>One clear design.<br /><span>Better feedback.</span></h2><p>Build the technical judgment behind production software. Write down your reasoning and get a review that shows exactly where to push next.</p><button className="primary-button" onClick={() => startPractice("parking-lot", DEMO_CONTENT)}><Play size={16} fill="currentColor" /> Continue with Parking Lot <ArrowRight size={16} /></button></div>
       <div className="hero-orbit" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="orbit-core"><Layers3 size={34} /><span>LLD</span></div><div className="orbit-tag tag-top">requirements</div><div className="orbit-tag tag-right">feedback</div><div className="orbit-tag tag-bottom">retry</div></div>
     </section>
-    <div className="stats-grid"><StatCard label="Reviewed attempts" value={String(completed.length)} note="Across 2 problem types" icon={<History size={17} />} /><StatCard label="Best learning signal" value={best ? `${best}/100` : "—"} note="Parking Lot · 13 Sep" icon={<Target size={17} />} tone="lime" /><StatCard label="Current streak" value="3 days" note="Small reps compound" icon={<Zap size={17} />} tone="amber" /><StatCard label="Next focus" value={weaknesses[0]?.criterion ?? "Start a rep"} note={weaknesses[0] ? `Flagged in ${weaknesses[0].count} attempts` : "Pick a problem to begin"} icon={<Lightbulb size={17} />} tone="coral" /> </div>
-    <div id="practice-anchor" className="section-heading"><div><div className="eyebrow">Choose your next rep</div><h2>Practice problems</h2></div><button className="text-button" onClick={() => window.scrollTo({ top: document.getElementById("practice-anchor")?.offsetTop ?? 620, behavior: "smooth" })}>View all <ArrowRight size={15} /></button></div>
+    <div data-reveal className="stats-grid"><StatCard label="Reviewed attempts" value={String(completed.length)} note="Across 2 problem types" icon={<History size={17} />} /><StatCard label="Best learning signal" value={best ? `${best}/100` : "—"} note="Parking Lot · 13 Sep" icon={<Target size={17} />} tone="lime" /><StatCard label="Current streak" value="3 days" note="Small reps compound" icon={<Zap size={17} />} tone="amber" /><StatCard label="Next focus" value={weaknesses[0]?.criterion ?? "Start a rep"} note={weaknesses[0] ? `Flagged in ${weaknesses[0].count} attempts` : "Pick a problem to begin"} icon={<Lightbulb size={17} />} tone="coral" /> </div>
+    <div id="practice-anchor" data-reveal className="section-heading"><div><div className="eyebrow">Choose your next rep</div><h2>Practice problems</h2></div><button className="text-button" onClick={() => window.scrollTo({ top: document.getElementById("practice-anchor")?.offsetTop ?? 620, behavior: "smooth" })}>View all <ArrowRight size={15} /></button></div>
     <div className="problem-grid">{PROBLEMS.map((problem, index) => <ProblemCard key={problem.id} problem={problem} index={index} onStart={() => startPractice(problem.id)} />)}</div>
-    {latest && <section id="history-anchor" className="last-review-card"><div className="last-review-copy"><div className="eyebrow">Last reviewed · {formatDate(latest.updatedAt)}</div><h3>{getProblem(latest.problemId).name} <span className="score-pill">{latest.evaluation?.overall}/100</span></h3><p>{latest.evaluation?.summary}</p></div><button className="secondary-button" onClick={() => openReview(latest)}>Open feedback <ArrowRight size={16} /></button></section>}
+    {latest && <section id="history-anchor" data-reveal className="last-review-card"><div className="last-review-copy"><div className="eyebrow">Last reviewed · {formatDate(latest.updatedAt)}</div><h3>{getProblem(latest.problemId).name} <span className="score-pill">{latest.evaluation?.overall}/100</span></h3><p>{latest.evaluation?.summary}</p></div><button className="secondary-button" onClick={() => openReview(latest)}>Open feedback <ArrowRight size={16} /></button></section>}
   </div>;
 }
 
 function ProblemCard({ problem, index, onStart }: { problem: Problem; index: number; onStart: () => void }) {
-  return <article className={`problem-card accent-${problem.accent}`} style={{ animationDelay: `${index * 50}ms` }}><div className="problem-card-top"><span className="number-stamp">0{index + 1}</span><span className="difficulty">{problem.difficulty}</span></div><div className="problem-art"><img src={problemImages[problem.id]} alt={`${problem.name} practice visual`} /><div className="art-shade" /><span className="art-label">{problem.eyebrow}</span></div><div className="problem-eyebrow">{problem.eyebrow}</div><h3>{problem.name}</h3><p>{problem.description}</p><div className="concept-row">{problem.concepts.map((concept) => <span key={concept}>{concept}</span>)}</div><div className="problem-footer"><span><Clock3 size={14} /> {problem.time}</span><button className="start-link" onClick={onStart}>Start rep <ArrowRight size={14} /></button></div></article>;
+  return <article data-reveal className={`problem-card accent-${problem.accent}`} style={{ animationDelay: `${index * 50}ms`, transitionDelay: `${index * 70}ms` }}><div className="problem-card-top"><span className="number-stamp">0{index + 1}</span><span className="difficulty">{problem.difficulty}</span></div><div className="problem-art"><img src={problemImages[problem.id]} alt={`${problem.name} practice visual`} /><div className="art-shade" /><span className="art-label">{problem.eyebrow}</span></div><div className="problem-eyebrow">{problem.eyebrow}</div><h3>{problem.name}</h3><p>{problem.description}</p><div className="concept-row">{problem.concepts.map((concept) => <span key={concept}>{concept}</span>)}</div><div className="problem-footer"><span><Clock3 size={14} /> {problem.time}</span><button className="start-link" onClick={onStart}>Start rep <ArrowRight size={14} /></button></div></article>;
 }
 
 function ProblemsView({ startPractice }: { startPractice: (problemId: string) => void }) {
