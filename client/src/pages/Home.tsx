@@ -56,10 +56,10 @@ const evaluator = new DeterministicRubricEvaluator();
 type View = "overview" | "problems" | "practice" | "review";
 
 const problemImages: Record<string, string> = {
-  "parking-lot": "/manus-storage/parking-lot_c5ef7a49.jpg",
-  "vending-machine": "/manus-storage/vending-machine_a1cd6c5c.jpg",
-  "elevator-system": "/manus-storage/elevator-system_8da5897d.jpg",
-  "library-management": "/manus-storage/library-management_007dfce1.jpg",
+  "parking-lot": "/assets/parking-lot.jpg",
+  "vending-machine": "/assets/vending-machine.jpg",
+  "elevator-system": "/assets/elevator-system.jpg",
+  "library-management": "/assets/library-management.jpg",
 };
 
 type Section = {
@@ -190,7 +190,7 @@ function Overview({ attempts, startPractice, openReview }: { attempts: Attempt[]
   }, []);
   return <div className="content-wrap overview-page">
     <Header eyebrow="CipherSchools · Wednesday · 16 September 2026" title={<>Make the second attempt<br /><em>more useful</em> than the first.</>} description="A focused practice loop for CipherSchools learners building the design judgment employers expect." action={<button className="icon-button" aria-label="Help"><CircleHelp size={18} /></button>} />
-    <section id="overview-anchor" className="hero-strip" style={{ backgroundImage: "linear-gradient(90deg, rgba(27,39,49,.98) 0%, rgba(27,39,49,.88) 45%, rgba(27,39,49,.38) 100%), url('/manus-storage/cipherschool-lab-hero_c525cbef.jpg')" }}>
+    <section id="overview-anchor" className="hero-strip" style={{ backgroundImage: "linear-gradient(90deg, rgba(27,39,49,.98) 0%, rgba(27,39,49,.88) 45%, rgba(27,39,49,.38) 100%), url('/assets/designgym-lab-hero.jpg')" }}>
       <div className="hero-copy"><div className="hero-kicker"><span className="live-dot" /> Your CipherSchools practice loop is active</div><h2>One clear design.<br /><span>Better feedback.</span></h2><p>Build the technical judgment behind production software. Write down your reasoning and get a review that shows exactly where to push next.</p><button className="primary-button" onClick={() => startPractice("parking-lot", DEMO_CONTENT)}><Play size={16} fill="currentColor" /> Continue with Parking Lot <ArrowRight size={16} /></button></div>
       <div className="hero-orbit" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="orbit-core"><Layers3 size={34} /><span>LLD</span></div><div className="orbit-tag tag-top">requirements</div><div className="orbit-tag tag-right">feedback</div><div className="orbit-tag tag-bottom">retry</div></div>
     </section>
