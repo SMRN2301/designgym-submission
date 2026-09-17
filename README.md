@@ -6,11 +6,11 @@ DesignGym is a focused practice loop for CipherSchools learners building softwar
 
 The product is intentionally narrow: it is a practice-and-feedback layer that complements CipherSchools lessons instead of pretending to be a complete LMS.
 
-## Live prototype
+## Live deployment
 
-Open the verified prototype here: [DesignGym — CipherSchools LLD Practice Lab](manus-webdev://7063a811).
+Open the public deployment here: [DesignGym — CipherSchools LLD Practice Lab](https://designgym-public.onrender.com).
 
-The link opens the current WebDev preview. For GitHub publication, push this repository to your own account after cloning or downloading it; the complete source, documentation, tests, and PDF submission bundle are already included.
+The application is deployed from the public GitHub repository at [SMRN2301/designgym-submission](https://github.com/SMRN2301/designgym-submission) and automatically redeploys when changes are pushed to `main`.
 
 ## Product loop
 
